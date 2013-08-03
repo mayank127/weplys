@@ -17,4 +17,12 @@ urlpatterns = patterns('',
     url(r'', include('social_auth.urls')),
     url(r'^login/$', login),
     url(r'^logout/$', logout),
+    url(r'^import/$', import_songs),
+    url(r'^add_songs/$', add_songs),
+    url(r'^add_playlist/$', add_playlist),
+    url(r'^load_playlist/$', load_playlist),
+    url(r'^delete_playlist/$', delete_playlist),
+    url(r'^add_song_to_playlist/$', add_song_to_playlist),
+    url(r'^delete_song_from_playlist/$', delete_song_from_playlist),
+       
 )
