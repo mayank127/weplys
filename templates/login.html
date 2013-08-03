@@ -1,0 +1,12 @@
+<html>
+	<head><title>WePlYS</title></head>
+	<body>
+		{% if user.is_authenticated %}
+			user.name
+		
+		{% else %}
+			<a href="google-oauth2/?next={{ next }}">Login By Google</a>
+			<a href="facebook/?next={{ next }}">Login By Facebook</a>
+		{% endif %}
+	</body>
+</html>
