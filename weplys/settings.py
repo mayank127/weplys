@@ -111,6 +111,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    'templates'
 )
 
 INSTALLED_APPS = (
@@ -124,6 +125,16 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+    'social_auth',
+    'weplys',
+)
+
+AUTHENTICATION_BACKENDS = (
+    'social_auth.backends.facebook.FacebookBackend',
+    'social_auth.backends.google.GoogleOAuthBackend',
+    'social_auth.backends.google.GoogleOAuth2Backend',
+    'social_auth.backends.google.GoogleBackend',
+    'django.contrib.auth.backends.ModelBackend',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -154,3 +165,12 @@ LOGGING = {
         },
     }
 }
+try:
+    from local_settings import *
+except Exception, e:
+    pass
+
+LOGIN_URL          = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_ERROR_URL    = '/login-error/'
+FACEBOOK_EXTENDED_PERMISSIONS = ['email']
