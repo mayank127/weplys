@@ -26,5 +26,6 @@ urlpatterns = patterns('',
     url(r'^add_song_to_playlist/$', add_song_to_playlist),
     url(r'^delete_song_from_playlist/$', delete_song_from_playlist),
     url(r'^get_lyrics/$', get_lyrics),
+    url(r'^main/$', main_page),
 
 )

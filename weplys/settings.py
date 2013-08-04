@@ -70,6 +70,7 @@ STATIC_URL = '/static/'
 # Additional locations of static files
 STATICFILES_DIRS = (
     'static',
+    '/home/mayank/Desktop'
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -136,6 +137,8 @@ AUTHENTICATION_BACKENDS = (
     'social_auth.backends.google.GoogleOAuth2Backend',
     'social_auth.backends.google.GoogleBackend',
     'django.contrib.auth.backends.ModelBackend',
+    'social_auth.backends.contrib.dropbox.DropboxBackend',
+
 )
 
 # A sample logging configuration. The only tangible logging
