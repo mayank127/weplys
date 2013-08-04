@@ -9,8 +9,8 @@ import json, urllib2, difflib
 from django.utils import timezone
 from django.core import serializers
 from django.forms.models import model_to_dict
-from django.core.serializers.json import DjangoJSONEncoder
-
+from lxml import etree
+from django.utils.http import urlencode
 def login(request):
 	if request.user.is_authenticated():
 		return HttpResponseRedirect('/')
@@ -41,40 +41,43 @@ def add_songs(request):
 			foldername = data['folder']
 			songlist = data['songlist']
 			for song in songlist:
-				url = 'http://tinysong.com/s/' + song['songname'].replace(' ', '+') + '?format=' + format + '&key=' + key
-				result = urllib2.urlopen(url)
-				resultData = json.loads(result.read())
-				if len(resultData)>0:
-					artistList = [x['ArtistName'] for x in resultData]
-					match = difflib.get_close_matches(song['artistname'], artistList)
-					if match:
-						songInfo = resultData[artistList.index(match[0])]
+				try:
+					url = 'http://tinysong.com/s/' + song['songname'].replace(' ', '+') + '?format=' + format + '&key=' + key
+					result = urllib2.urlopen(url)
+					resultData = json.loads(result.read())
+					if len(resultData)>0:
+						artistList = [x['ArtistName'] for x in resultData]
+						match = difflib.get_close_matches(song['artistname'], artistList)
+						if match:
+							songInfo = resultData[artistList.index(match[0])]
+						else:
+							songInfo = resultData[0]
+						try:
+							songDB = SongInfo.objects.get(songID=songInfo['songname'])
+						except:
+							songDB = SongInfo(songID=songInfo['SongID'], songname=songInfo['SongName'], playcount=0, artist=songInfo['ArtistName'], album=songInfo['AlbumName'])
+							songDB.save()
 					else:
-						songInfo = resultData[0]
-					try:
-						songDB = SongInfo.objects.get(songID=songInfo['SongID'])
-					except:
-						songDB = SongInfo(songID=songInfo['SongID'], songname=songInfo['SongName'], playcount=0, artist=songInfo['ArtistName'], album=songInfo['AlbumName'])
+						songDB = SongInfo(songID="-1", songname=song['songname'],playcount=0,artist=song['artistname'],album="Unknown")
 						songDB.save()
-				else:
-					songDB = SongInfo(songID="-1", songname=song['songname'],playcount=0,artist=song['artistname'],album="Unknown")
-					songDB.save()
-				
-				try:
-					userSong = UserSongs.objects.get(user=request.user, song=songDB)
+					
+					try:
+						userSong = UserSongs.objects.get(user=request.user, song=songDB)
+					except:
+						userSong = UserSongs(user=request.user, song=songDB, filelocation= foldername+'/'+song['filename'], playcount=0, lastplayed=timezone.now(), userrating=0)
+						userSong.save()
+					try:
+						userPlaylist = UserPlaylist.objects.get(user=request.user, playlistName="All Songs")
+					except:
+						userPlaylist = UserPlaylist(user=request.user, playlistName="All Songs")
+						userPlaylist.save()
+					try:
+						playlistSong = PlaylistSong.objects.get(playlist=userPlaylist, song=songDB)
+					except:
+						playlistSong = PlaylistSong(playlist=userPlaylist, song=songDB)
+						playlistSong.save()
 				except:
-					userSong = UserSongs(user=request.user, song=songDB, filelocation= foldername+'/'+song['filename'], playcount=0, lastplayed=timezone.now(), userrating=0)
-					userSong.save()
-				try:
-					userPlaylist = UserPlaylist.objects.get(user=request.user, playlistName="All Songs")
-				except:
-					userPlaylist = UserPlaylist(user=request.user, playlistName="All Songs")
-					userPlaylist.save()
-				try:
-					playlistSong = PlaylistSong.objects.get(playlist=userPlaylist, song=songDB)
-				except:
-					playlistSong = PlaylistSong(playlist=userPlaylist, song=songDB)
-					playlistSong.save()
+					pass
 	return HttpResponse('OK')
 
 @login_required(login_url='/login/')
@@ -152,3 +155,73 @@ def delete_song_from_playlist(request):
 			except:
 				pass
 		return load_playlist(request)
+
+@login_required(login_url='/login/')
+def delete_song(request):
+	if request.is_ajax():
+		if request.method == 'POST':
+			data = json.loads(request.POST['data'])
+			try:
+				song = SongInfo.objects.get(songname=data['songName'])
+				usersong = UserSongs.objects.get(user=request.user, song=song)
+				PlaylistSong.objects.filter(song=usersong.song).delete()
+				usersong.delete()
+			except:
+				pass
+		return HttpResponse('OK')
+
+@login_required(login_url='/login/')
+def get_lyrics(request):
+	if request.is_ajax():
+		if request.method == 'POST':
+			data = json.loads(request.POST['data'])
+			try:
+				song = SongInfo.objects.get(songname=data['songName'])
+				url = "http://lyrics.wikia.com/api.php?func=getSong&artist="+song.artist.replace(" ","_")+"&song="+song.songname.replace(" ","_")+"&fmt=json"
+				result = urllib2.urlopen(url)
+				strname = result.read()
+				resultData = strname.split("'url':'")[-1].split("'\n")[0]
+				url="http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20html%20where%20url=%22"+resultData+"%22%20and%20xpath=%27//div[@class=%22lyricbox%22]/p%27&format=json"
+				result = urllib2.urlopen(url)
+				strname = result.read()
+				resultData = strname.split('"content":"')[-1].split('"')[0].replace("\\n", "<br>")
+				print resultData
+				return HttpResponse(resultData)
+			except Exception,e:
+				pass
+		return HttpResponse('OK')
+
+def dictlist(node):
+	res = {}
+	res[node.tag] = []
+	xmltodict(node,res[node.tag])
+	reply = {}
+	reply[node.tag] = {'value':res[node.tag],'attribs':node.attrib,'tail':node.tail}
+	
+	return reply
+
+def xmltodict(node,res):
+	rep = {}
+	
+	if len(node):
+		#n = 0
+		for n in list(node):
+			rep[node.tag] = []
+			value = xmltodict(n,rep[node.tag])
+			if len(n):
+			
+				value = {'value':rep[node.tag],'attributes':n.attrib,'tail':n.tail}
+				res.append({n.tag:value})
+			else :
+				
+				res.append(rep[node.tag][0])
+			
+	else:
+		
+		
+		value = {}
+		value = {'value':node.text,'attributes':node.attrib,'tail':node.tail}
+		
+		res.append({node.tag:value})
+	
+	return 

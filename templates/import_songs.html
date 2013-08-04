@@ -18,8 +18,7 @@
 		folder: "troll/trolll/",
 	};
 	var playlist = {
-		playlistName:"temp",
-		songName: "Numb"
+		songName: "Bad"
 	}
 	data = { 
                 'data' : JSON.stringify(playlist),
@@ -28,7 +27,7 @@
 	$.ajax(
     {
         'type': 'POST',
-        'url': '/delete_song_from_playlist/',
+        'url': '/get_lyrics/',
         
         'data': data,
         'dataType': 'json',
