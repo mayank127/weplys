@@ -1,385 +1,101 @@
-{% load staticfiles%}
-<!DOCTYPE html>
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta charset="utf-8">
-    <title>WePLYS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Shades of gunmetal gray.">
-    <meta name="author" content="Thomas Park">
+{% extends "base.html" %}
+{% block title %}Main{% endblock %}
+{% block nav-options %}
+  <ul class="nav" id="main-menu-left">
+    <li><a href="/about">About Us</a></li>
+    <li><a id="swatch-link" href="/contact">Contact Us</a></li>
+    <li><input type="file" class="btn"  id="songFiles" multiple></input>  </li>
+  </ul>
+  <ul class="nav pull-right" id="main-menu-right">
+    <li><a href="#" rel="tooltip">UserName </a></li>
+    <li><a href="/logout/"rel="tooltip">Signout</a></li>
+  </ul>
+{% endblock %}
 
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <link href="{% static "css/bootstrap.css" %}" rel="stylesheet">
-    <link href="{% static "css/bootstrap-responsive.min.css" %}" rel="stylesheet">
-    <link href="{% static "css/bootswatch.css" %}" rel="stylesheet">
-
-	<style>
-		.column{
-		padding:0px;
-		
-		}
-		.table th{
-		line-height:2px;
-		border-top:none;
-		}
-		.lineH{
-		line-height:2px;
-		}
-		.songs{
-		cursor: pointer;
-		}
-		.togg{
-		border: 1px solid #101214;
-		text-align:center;
-		border-radius:5%;
-		color:black;
-		padding-top:1%;
-		background-color: #272b30;
-		height:60px;
-		overflow:auto;
-		}
-	</style>
-	<script type="text/javascript"  src="{% static "js/jquery-1.10.2.min.js" %}"></script>
-  <script type="text/javascript"  src="{% static "js/bsa.js" %}"></script>
-  <script type="text/javascript"  src="{% static "js/bootstrap.min.js" %}"></script>
-  <script src="{% static "audiojs/audio.min.js" %}"></script>
-  <script>
-  	var x=0;
-  	var lyrics="yo-yo";
-  	var toggleFlag =new Array();
-  	toggleFlag['stats']=0;
-  	toggleFlag['recs']=0;
-  	toggleFlag['lists']=0;
-  	toggleFlag['Allsongs']=0;
-  	var currentPlaylist=new Array;//list to store the currentPlaylist
-	currentPlaylist=['file:///home/mayank/Desktop/gotye.mp3'];
-  	//function to add new songs to list
-  	function addTolist(){
-  	$('#Playlist').append("<li><a href='#' id="+currentPlaylist.length+" data-src=''>dead"+i+"</a></li>")
-			$('#'+i+'').attr('data-src',currentPlaylist[i]);
-  	}
-  	//-----------------------------------------------------//
-	  $(function() { 
-        // Setup the player to autoplay the next track
-        var a = audiojs.createAll({
-          trackEnded: function() {          
-            var next = $('ol li.playing').next();
-            if (!next.length) next = $('ol li').first();
-            next.addClass('playing').siblings().removeClass('playing');
-            audio.load($('a', next).attr('data-src'));
-            audio.play();
-            
-          }
-        });
-		for(var i=0;i<currentPlaylist.length;i++){
-			$('#Playlist').append("<li><a href='#' id="+i+" data-src=''>dead wrong"+i+"</a></li>")
-			$('#'+i+'').attr('data-src', currentPlaylist[i]);
-		}
-  	 	audio = a[0];
-        var first = $('ol a').attr('data-src');
-        $('ol li').first().addClass('playing');
-        audio.load(first);
-        $('ol li').click(function(e) {
-          e.preventDefault();
-          $(this).addClass('playing').siblings().removeClass('playing');
-          audio.load($('a', this).attr('data-src'));
-          
-          audio.play();
-        });
-		 $("#shuffle").click(function(){
-	 	currentPlaylist=shuffle(currentPlaylist);
-	 	console.log("alok");
-	 	for(var i=0;i<currentPlaylist.length;i++){
-	 	$('#'+i+'').attr('data-src', currentPlaylist[i]);
-	 	}
-	 	var first = $('ol a').attr('data-src');
-	 	$('ol li').first().addClass('playing');
-		audio.load(first);
-		audio.play();
- 	
- });
- 	$("#stats").click(function(){
-    $(".stat").toggle("slow");
-  });
-   	$("#recs").click(function(){
-    $(".rec").toggle("slow");
-  });
-   	$("#lists").click(function(){
-    $(".list").toggle("slow");
-  });
-   	$("#Allsongs").click(function(){
-    $(".Allsong").toggle("slow");
-  });
-  
- });
- //-------------------------------------------------------------------------------//
- //shuffle
- function shuffle(o){ //v1.0
-    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-    return o;
-}
-
-
- //------------------------------------------------------------------------------//
-	setInterval(function(){
-	var dur=parseInt(audio.duration,10);
-	var cur=parseInt(audio.element.currentTime,10);
-	var sub=dur-cur;
-	if(cur==dur){
-	$('#5').attr('data-src', '{% static gotye.mp3 %}');
-	var next = $('ol li.playing').next();
-	
-    if (!next.length) next = $('ol li').first();
-     next.addClass('playing').siblings().removeClass('playing');
-     audio.load($('a', next).attr('data-src'));
-     audio.play();
-	}
-	},1000);
-  	
-
-  var makedata = function(data){
-    return { 
-      'data' : JSON.stringify(data),
-      'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val(),
-    }
-  };
-
-  var ajax = function(data, url, success){
-    return $.ajax(
-    {
-        'type': 'POST',
-        'url': url,        
-        'data': makedata(data),
-        'dataType': 'json',
-        'success' : success
-    });
-  }
-  var playlist = []
-  //ajax({'playlistName':""}, '/add_playlist/', function(data){
-    //playlist.push(data);
-
-  //});
-
-
-	</script>
-  <style type="text/css"></style></head>
-
-  <body class="preview" id="top" data-spy="scroll" data-target=".subnav" data-offset="80" style="margin-top: 0px;padding-top:50px;">
-    <script src="{% static "js/bsa.js" %}"></script>
-    {% csrf_token %}
-
-
-  <!-- Navbar
-    ================================================== -->
- <div class="navbar navbar-fixed-top">
-   <div class="navbar-inner">
-     <div class="container">
-       <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-         <span class="icon-bar"></span>
-         <span class="icon-bar"></span>
-         <span class="icon-bar"></span>
-       </a>
-       <a class="brand" href="/media/vivek/ACER/HackYouWebSiteDesign/weplys.html"> WePlYS</a>
-       <div class="nav-collapse collapse" id="main-menu">
-        <ul class="nav" id="main-menu-left">
-          <li><a href="/media/vivek/ACER/HackYouWebSiteDesign/AboutUs.html">About Us</a></li>
-          <li><a id="swatch-link" href="/media/vivek/ACER/HackYouWebSiteDesign/contactUs.html">Contact Us</a></li>
-
- 
-        </ul>
-        <ul class="nav pull-right" id="main-menu-right">
-          <li><a rel="tooltip" href="/">UserName </a></li>
-          <li><a rel="tooltip" href="/logout/">Signout</a></li>
-        </ul>
-       </div>
-     </div>
-   </div>
- </div>
-
-<div class="container" >
-
-
-  
-<div class="row" >
-	<div class="span3 well" style="margin-left:0px">
-	      <ul class="nav nav-pills nav-stacked">
-		   <li class="active">
-			<a id="stats" class="togB" href="#">
-			  Stats
-			</a>
-			<div class="stat togg" style="display:none;">
-        		<p><a href="#">stats 1</a></p>
-       			<p><a href="#">stats 2</a></p>
- 
-      		</div>
-		  </li>
-		  <li class="active">
-			<a href="#" id="recs">
-			  Recommendation
-			</a>
-			<div class="rec togg" style="display:none;">
-        		<p><a href="#">rec 1</a></p>
-       			<p><a href="#">rec 2</a></p>
- 
-      		</div>
-		  </li>
-		   <li class="active" >
-			<a href="#" id="lists">
-			  Playlists
-			</a>
-			<div class="list togg" style="display:none;">
-        		<p><a href="#">Playlist 1</a></p>
-       			<p><a href="#">Playlist 2</a></p>
- 
-      		</div>
-		  </li>
-		   <li class="active">
-			<a href="#" id="Allsongs">
-			  All Songs
-			</a>
-			<div class="Allsong togg" style="display:none;">
-        		<p><a href="#">Song 1</a></p>
-       			<p><a href="#">Song 2</a></p>
- 
-      		</div>
-		  </li>
-		</ul>
-
-	
-  </div>
-    <div class="span5  well" style="margin-left:10px;margin-bottom:5px">
-	<div class="span2 well" style="margin-left:0px">
-	</div>
-	<div class="span2" style="margin-left:15px;width:220px">
-	<span class="badge">Songs Info:</span>
-	<table class="table" style="font-size:10px;">
-	<tbody>
-      <tr>
-        <th>Songs Name</th>
-      </tr>
-
-      <tr>
-        <th>Artist</th>
-      </tr>
-      <tr>
-        <th>Album</th>
-      </tr>
-      <tr>
-        <th>User Rating</th>
-      </tr>
-      <tr>
-        <th>Global Rating</th>
-      </tr>
-      <tr>
-        <th>Last Palyed</th>
-      </tr>
-      <tr>
-        <th># of Playes (Global)</th>
-      </tr>
-      <tr>
-        <th># of Playes (Personal)</th>
-      </tr>
-      <tr>
-        <th>Users</th>
-      </tr>
-    </tbody>
-  </table>
-    
+{% block content %}
+  <div class="row" >
+    <div class="span3 well">
+      <ul class="nav nav-pills nav-stacked">
+        <li class="active">
+          <a id="stats" class="togB" href="#">
+            Stats
+          </a>
+          <div class="stat togg" style="display:none;">
+            <p><a href="#">stats 1</a></p>
+            <p><a href="#">stats 2</a></p>
+          </div>
+        </li>
+        <li class="active">
+          <a href="#" id="recs">
+            Recommendation
+          </a>
+          <div class="rec togg" style="display:none;">
+            <p><a href="#">rec 1</a></p>
+            <p><a href="#">rec 2</a></p>
+          </div>
+        </li>
+        <li class="active" >
+          <a href="#" id="lists">
+            Playlists
+          </a>
+          <div class="list togg" style="display:none;">
+            <p><a href="#">Playlist 1</a></p>
+            <p><a href="#">Playlist 2</a></p>
+          </div>
+        </li>
+        <li class="active">
+          <a href="#" id="Allsongs">
+            All Songs
+          </a>
+          <div class="Allsong togg" style="display:none;">
+            <p><a href="#">Song 1</a></p>
+            <p><a href="#">Song 2</a></p>
+          </div>
+        </li>
+      </ul>
     </div>
-    <audio id="player" preload="auto"></audio>
-    <div class="well" style="padding: 3px 0;">
-        <ul class="nav nav-list" style="backgroud-color:white;height:200px;overflow:auto;">
-          <li class="nav-header">Playlist:</li>
-          <ol id="Playlist" style="height:180px;">
 
-      	</ol>
-        </ul>
+
+    <div class="span5  well" >
+      <div class="row span5 ">
+        <div class="span2 " >
+          <img src="/" id="albumimage"></img>
+        </div>
+        <div class="span2 " >
+          <span class="badge">Songs Info:</span>
+          <table class="table" id="songInfo" style="font-size:10px;">
+            <tbody>
+              <tr>
+                <th>Songs Name:</th>
+                <th id="songname"></th>
+              </tr>
+              <tr>
+                <th>Artist:</th>
+                <th id="artist"></th>
+              </tr>
+              <tr>
+                <th>Album:</th>
+                <th id="album"></th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div class="btn btn-small " id="shuffle" href="">Shuffle</div>
+      <audio id="player" preload="auto"></audio><br>
+      <ul class="nav nav-list" style="backgroud-color:white;height:200px;overflow:auto;">
+        <li class="nav-header">Playlist:</li>
+        <ol id="Playlist" >
+        </ol>
+      </ul>
+      <div class="btn btn-small " id="shuffle" href="">
+        Shuffle
+      </div>
     </div>
-    	<div class="span3 well" style="margin-left:10px">
-    	<p style="font-size:20px"> Lyrics</p>
-    	<hr>
-		<div class="panel" style="height:420px;overflow:auto;">
- 		 Try the renewed popup! (again) hideI'm tired of being what you want me to be
-			Feeling so faithless, lost under the surface
-			Don't know what you're expecting of me
-			Put under the pressure of walking in your shoes
-
-			(Caught in the undertow, just caught in the undertow)
-			Every step that I take is another mistake to you
-			(Caught in the undertow, just caught in the undertow)
-
-			I've become so numb
-			I can't feel you there
-			I've become so tired
-			So much more aware
-			I'm becoming this
-			All I want to do 
-			Is be more like me
-			And be less like you
-
-			Can't you see that you're smothering me?
-			Holding too tightly, afraid to lose control
-			'Cause everything that you thought I would be
-			Has fallen apart right in front of you
-
-			(Caught in the undertow, just caught in the undertow)
-			Every step that I take is another mistake to you
-			(Caught in the undertow, just caught in the undertow)
-			And every second I waste is more than I can take
-
-			I've become so numb
-			I can't feel you there
-			I've become so tired
-			So much more aware
-			I'm becoming this
-			All I want to do
-			Is be more like me
-			And be less like you
-
-			And I know 
-			I may end up failing too
-			But I know 
-			You were just like me with someone disappointed in you
-
-			I've become so numb
-			I can't feel you there
-			I've become so tired
-			So much more aware
-			I'm becoming this
-			All I want to do
-			Is be more like me
-			And be less like you
-			I've become so numb
-			I can't feel you there
-			I'm tired of being what you want me to be
-			I've become so numb
-			I can't feel you there
-			I'm tired of being what you want me to be 
-
-			Remember: lyrics are property of their owners.
-		</div>
+    <div class="span3 well" style="margin-left:10px">
+      <p style="font-size:20px">Lyrics</p>
+      <hr>
+      <div class="panel" style="height:420px;overflow:auto;">
+      </div>
     </div>
- </div>
-    
-  <hr>
-
-      <footer id="footer">
-        
-        <div class="links">
-          <a href="http://news.bootswatch.com/" onclick="pageTracker._link(this.href); return false;">Blog</a>
-          <a href="http://feeds.facebook.com/alok29">Facebook</a>
-          <a href="https://twitter.com">Twitter</a>
-          <a href="https://github.com/thomaspark/bootswatch/">GitHub</a>
-      </div>  
- 
-    
-    
-    
-    </div>
-</body>
-</html>
-    
+  </div>
+{% endblock %}

@@ -1,0 +1,72 @@
+
+{% load staticfiles %}
+<!DOCTYPE html>
+<!-- saved from url=(0029)http://bootswatch.com/slate/# -->
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>WePLYS - {% block title %}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/bootstrap-responsive.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/bootswatch.css" %}" rel="stylesheet">
+    <link href="{% static "css/weplys.css" %}" rel="stylesheet">
+    {% block extracss %}{% endblock %}
+
+
+
+  </head>
+
+<body class="preview" id="top" data-spy="scroll" data-target=".subnav" data-offset="80" style="margin-top: 0px;padding-top:50px;">
+
+  <!-- Navbar
+  ================================================== -->
+  <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="/main">WePlYS</a>
+        <div class="nav-collapse collapse" id="main-menu">
+          {% block nav-options %}
+            <ul class="nav" id="main-menu-left">
+              <li><a href="/about">About Us</a></li>
+              <li><a id="swatch-link" href="/contact">Contact Us</a></li>
+            </ul>
+            <ul class="nav pull-right" id="main-menu-right">
+              <li><a href="#" rel="tooltip">UserName </a></li>
+              <li><a href="/logout/"rel="tooltip">Signout</a></li>
+            </ul>
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container" >
+    {% block content %}{% endblock %}
+    <hr>
+    {% block footer %}
+    <footer id="footer">
+      <div class="links">
+        <a href="http://facebook.com/">Facebook</a>
+        <a href="https://twitter.com">Twitter</a>
+        <a href="https://github.com/">GitHub</a>
+      </div>
+    </footer>
+    {% endblock %}
+
+  </div>
+</body>
+
+<script type="text/javascript"  src="{% static "js/jquery.min.js" %}"></script>
+<script type="text/javascript"  src="{% static "js/bootstrap.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/Bacon.min.js" %}" ></script>
+<script src="{% static "audiojs/audio.min.js" %}"></script>
+<script src="{% static "js/id.js" %}"></script>
+<script src="{% static "js/main.js" %}"></script>
+{% block extrajs %}{% endblock %}
+</html>

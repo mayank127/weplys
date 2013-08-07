@@ -36,6 +36,12 @@ def main_page(request):
 	args.update(csrf(request))
 	return render_to_response('weplys.html',args)
 
+def about(request):
+	return render_to_response('about.html')
+
+def contact(request):
+	return render_to_response('contact.html')
+
 @login_required(login_url='/login/')
 def add_songs(request):
 	format = "json"

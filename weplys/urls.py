@@ -5,14 +5,6 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'weplys.views.home', name='home'),
-    # url(r'^weplys/', include('weplys.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     url(r'', include('social_auth.urls')),
     url(r'^login/$', login),
@@ -26,6 +18,7 @@ urlpatterns = patterns('',
     url(r'^add_song_to_playlist/$', add_song_to_playlist),
     url(r'^delete_song_from_playlist/$', delete_song_from_playlist),
     url(r'^get_lyrics/$', get_lyrics),
-    url(r'^main/$', main_page),
-
+    url(r'^main/', main_page),
+    url(r'^about/$', about),
+    url(r'^contact/$', contact),
 )
