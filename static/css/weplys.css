@@ -19,6 +19,7 @@
 	padding-top:1%;
 	background-color: #272b30;
 	height:60px;
+	z-index: -100;
 }
 .playing{
 	opacity: 0.5;

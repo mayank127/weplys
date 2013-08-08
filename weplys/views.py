@@ -11,6 +11,7 @@ from django.core import serializers
 from django.forms.models import model_to_dict
 from lxml import etree
 from django.utils.http import urlencode
+import time
 def login(request):
 	if request.user.is_authenticated():
 		return HttpResponseRedirect('/')
@@ -20,7 +21,6 @@ def login(request):
 		else:
 			return render_to_response('login.html', {'next' : ''})
 
-#@login_required(login_url='/login/')
 def logout(request):
 	auth.logout(request)
 	return HttpResponseRedirect('/login/')
@@ -28,68 +28,69 @@ def logout(request):
 def import_songs(request):
 	args = {}
 	args.update(csrf(request))
-	return render_to_response('import_songs.html', args)
+	return render_to_response('checkpost.html', args)
 
-#@login_required(login_url='/login/')
+@login_required(login_url='/login/')
 def main_page(request):
 	args = {}
 	args.update(csrf(request))
+	args['user'] = request.user.first_name +" " +request.user.last_name
 	return render_to_response('weplys.html',args)
 
+@login_required(login_url='/login/')
 def about(request):
-	return render_to_response('about.html')
-
-def contact(request):
-	return render_to_response('contact.html')
+	return render_to_response('about.html', {'user' : request.user.first_name +" " +request.user.last_name})
 
 @login_required(login_url='/login/')
-def add_songs(request):
+def contact(request):
+	return render_to_response('contact.html',  {'user' : request.user.first_name +" " +request.user.last_name})
+
+@login_required(login_url='/login/')
+def add_song(request):
 	format = "json"
 	key = 'b4c23ac3ddbce25921a781e058e97991'
 	if request.is_ajax():
 		if request.method == 'POST':
-			data = json.loads(request.POST['data'])
-			foldername = data['folder']
-			songlist = data['songlist']
-			for song in songlist:
-				try:
-					url = 'http://tinysong.com/s/' + song['songname'].replace(' ', '+') + '?format=' + format + '&key=' + key
-					result = urllib2.urlopen(url)
-					resultData = json.loads(result.read())
-					if len(resultData)>0:
-						artistList = [x['ArtistName'] for x in resultData]
-						match = difflib.get_close_matches(song['artistname'], artistList)
-						if match:
-							songInfo = resultData[artistList.index(match[0])]
-						else:
-							songInfo = resultData[0]
-						try:
-							songDB = SongInfo.objects.get(songID=songInfo['songname'])
-						except:
-							songDB = SongInfo(songID=songInfo['SongID'], songname=songInfo['SongName'], playcount=0, artist=songInfo['ArtistName'], album=songInfo['AlbumName'])
-							songDB.save()
+			song = json.loads(request.POST['song'])
+			print song
+			try:
+				url = 'http://tinysong.com/s/' + song['songname'].replace(' ', '+') + '?format=' + format + '&key=' + key
+				result = urllib2.urlopen(url)
+				resultData = json.loads(result.read())
+				print resultData
+				print "\n\n\n"
+				if len(resultData)>0:
+					artistList = [x['ArtistName'] for x in resultData]
+					match = difflib.get_close_matches(song['artistname'], artistList)
+					print "Match", match
+					if match:
+						songInfo = resultData[artistList.index(match[0])]
 					else:
-						songDB = SongInfo(songID="-1", songname=song['songname'],playcount=0,artist=song['artistname'],album="Unknown")
+						songInfo = resultData[0]
+					try:
+						print "songInfo> ",songInfo
+						print songInfo['SongName']
+						songDB = SongInfo.objects.get(songname=songInfo['SongName'])
+						print songDB
+					except Exception,e:
+						print "here", e
+						songDB = SongInfo(songID=songInfo['SongID'], songname=songInfo['SongName'], playcount=0, artist=songInfo['ArtistName'], album=songInfo['AlbumName'])
 						songDB.save()
-					
 					try:
-						userSong = UserSongs.objects.get(user=request.user, song=songDB)
-					except:
-						userSong = UserSongs(user=request.user, song=songDB, filelocation= foldername+'/'+song['filename'], playcount=0, lastplayed=timezone.now(), userrating=0)
+						user= request.user._wrapped if hasattr(request.user,'_wrapped') else request.user
+						userSong = UserSongs.objects.get(user=user, song=songDB)
+					except Exception,e:
+						print e
+						userSong = UserSongs(user=user, song=songDB, playcount=0, lastplayed=timezone.now(), userrating=0)
 						userSong.save()
-					try:
-						userPlaylist = UserPlaylist.objects.get(user=request.user, playlistName="All Songs")
-					except:
-						userPlaylist = UserPlaylist(user=request.user, playlistName="All Songs")
-						userPlaylist.save()
-					try:
-						playlistSong = PlaylistSong.objects.get(playlist=userPlaylist, song=songDB)
-					except:
-						playlistSong = PlaylistSong(playlist=userPlaylist, song=songDB)
-						playlistSong.save()
-				except:
-					pass
-	return HttpResponse('OK')
+					dict = model_to_dict(userSong)
+					dict['lastplayed'] = str(time.mktime(dict['lastplayed'].timetuple()))
+					dict['song'] = model_to_dict(userSong.song)
+					print dict
+					return HttpResponse(json.dumps(dict), mimetype="application/json")
+			except Exception,e:
+				print e
+	return HttpResponse("OK")
 
 @login_required(login_url='/login/')
 def add_playlist(request):
@@ -184,9 +185,9 @@ def delete_song(request):
 def get_lyrics(request):
 	if request.is_ajax():
 		if request.method == 'POST':
-			data = json.loads(request.POST['data'])
+			data = json.loads(request.POST['song'])
 			try:
-				song = SongInfo.objects.get(songname=data['songName'])
+				song = SongInfo.objects.get(songname=data)
 				url = "http://lyrics.wikia.com/api.php?func=getSong&artist="+song.artist.replace(" ","_")+"&song="+song.songname.replace(" ","_")+"&fmt=json"
 				result = urllib2.urlopen(url)
 				strname = result.read()
@@ -195,9 +196,10 @@ def get_lyrics(request):
 				result = urllib2.urlopen(url)
 				strname = result.read()
 				resultData = strname.split('"content":"')[-1].split('"')[0].replace("\\n", "<br>")
-				print resultData
-				return HttpResponse(resultData)
+				dict = model_to_dict(song)
+				dict['lyrics'] = resultData
+				return HttpResponse(json.dumps(dict), mimetype="application/json")
 			except Exception,e:
 				pass
-		return HttpResponse('OK')
+		return HttpResponse('Not Found')
 

@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Main{% endblock %}
-{% block nav-options %}
-  <ul class="nav" id="main-menu-left">
-    <li><a href="/about">About Us</a></li>
-    <li><a id="swatch-link" href="/contact">Contact Us</a></li>
-    <li><input type="file" class="btn"  id="songFiles" multiple></input>  </li>
-  </ul>
-  <ul class="nav pull-right" id="main-menu-right">
-    <li><a href="#" rel="tooltip">UserName </a></li>
-    <li><a href="/logout/"rel="tooltip">Signout</a></li>
-  </ul>
-{% endblock %}
-
 {% block content %}
+{% csrf_token %}
   <div class="row" >
     <div class="span3 well">
       <ul class="nav nav-pills nav-stacked">
@@ -87,14 +76,17 @@
         <ol id="Playlist" >
         </ol>
       </ul>
-      <div class="btn btn-small " id="shuffle" href="">
-        Shuffle
-      </div>
+      <br>
+        <div class="btn btn-small " id="shuffle" href="">
+          Shuffle
+        </div>
+        <input type="file" name="file" style="display:none;" multiple id="songFiles" />
+        <a class="btn btn-small" onclick="$('#songFiles').click();">Add Music</a>
     </div>
     <div class="span3 well" style="margin-left:10px">
       <p style="font-size:20px">Lyrics</p>
       <hr>
-      <div class="panel" style="height:420px;overflow:auto;">
+      <div class="panel" id="lyrics" style="height:350px;overflow:auto;">
       </div>
     </div>
   </div>

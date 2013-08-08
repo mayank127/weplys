@@ -35,7 +35,7 @@ loadMusic.assign(function(data){
 });
 
 var audio = audiojs.createAll({
-  trackEnded: function() {          
+  trackEnded: function() {
     var next = $('ol li.playing').next();
     if (!next.length) next = $('ol li').first();
     next.addClass('playing').siblings().removeClass('playing');
@@ -51,16 +51,7 @@ var load = function(){
 		return $('a', current).attr('data-id');
 	});
 	changeSong.plug(clickSong);
-	changeSong.assign(function(j){
-		for (var i = currentPlaylist.length - 1; i >= 0; i--) {
-			if (currentPlaylist[i].id==j){
-				audio.load(currentPlaylist[i].src);
-		    	audio.play();
-				loadFileData(currentPlaylist[i].file);
-			}
-		};
-		
-	});
+	changeSong.assign(playSong);
 }
 var addToList = function(){
    	$('#Playlist').empty();
@@ -88,6 +79,22 @@ var loadFileData = function(file) {
 	   			var base64 = "data:" + image.format + ";base64," + Base64.encodeBytes(image.data);
 			$("#albumimage").attr('src',base64);
 			$("#albumimage").height($("#albumInfo").height());
+
+			var ajaxInfo = Bacon.fromPromise(addSong({
+				songname: tags.title,
+				artistname: tags.artist,
+			}));
+			ajaxInfo.assign(function(data){
+				console.log(data);
+				$("#songname").html(data.song.songname);
+	      		$("#artist").html(data.song.artist);
+	      		$("#album").html(data.song.album);
+				var lyrics = Bacon.fromPromise(getLyrics(data.song.songname));
+				lyrics.assign(function(data){
+					console.log(data);
+					$("#lyrics").html(data.lyrics);
+				});
+			});
 		}, {
 		  tags: ["title","artist","album","picture"],
 		  dataReader: FileAPIReader(file)
@@ -95,6 +102,51 @@ var loadFileData = function(file) {
 	};
 	reader.readAsArrayBuffer(file);
 }
+
+var playSong = function(j){
+	for (var i = currentPlaylist.length - 1; i >= 0; i--) {
+		if (currentPlaylist[i].id==j){
+			audio.load(currentPlaylist[i].src);
+	    	audio.play();
+			loadFileData(currentPlaylist[i].file);
+		}
+	};
+}
+
+var addSong = function(song){
+	var songInfo;
+	data = {
+		'song' : JSON.stringify(song),
+        'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val(),
+    };
+	return $.ajax(
+    {
+        'type': 'POST',
+        'url': '/add_song/',
+        'data': data,
+        'dataType': 'json',
+    }).then(function(data) {
+        return data;
+    });
+}
+
+var getLyrics = function(songname){
+	var songInfo;
+	data = {
+		'song' : JSON.stringify(songname),
+        'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val(),
+    };
+	return $.ajax(
+    {
+        'type': 'POST',
+        'url': '/get_lyrics/',
+        'data': data,
+        'dataType': 'json',
+    }).then(function(data) {
+        return data;
+    });
+}
+
 var toggleFlag = [];
 toggleFlag['stats']=0;
 toggleFlag['recs']=0;
@@ -112,3 +164,5 @@ $("#stats").click(function(){
  	$("#Allsongs").click(function(){
   $(".Allsong").toggle("slow");
 });
+
+
